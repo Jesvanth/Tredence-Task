@@ -1,6 +1,6 @@
 # Self-Pruning Neural Network - Report
 **Tredence AI Engineering Internship Case Study**
-
+**Hosted Here: https://tredenceaitask.netlify.app/**
 ---
 
 ## 1. Why Does L1 Penalty on Sigmoid Gates Encourage Sparsity?
