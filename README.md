@@ -38,7 +38,7 @@ Since our gates are always positive (sigmoid output > 0), L1 gradient = **+1 alw
 
 This means:
 - A gate at 0.8 gets the **same push toward zero** as a gate at 0.001
-- L2 would barely nudge a gate that's already small — L1 keeps pushing until the gate **hits zero**
+- L2 would barely nudge a gate that's already small - L1 keeps pushing until the gate **hits zero**
 - This is the mathematical reason L1 produces **true sparsity** while L2 only produces **small values**
 
 ### The Collapse Mechanism
@@ -47,9 +47,9 @@ During training, the optimizer minimises both losses simultaneously:
 - **CrossEntropyLoss** wants gates to stay open (to maintain model capacity)
 - **λ × SparsityLoss** wants all gates to close (to minimise the penalty)
 
-Gates that correspond to **unimportant weights** — those that don't meaningfully reduce classification loss — will lose the tug-of-war and collapse toward 0. Gates of **critical weights** resist because their gradient from classification loss is large enough to counteract the L1 penalty.
+Gates that correspond to **unimportant weights** - those that don't meaningfully reduce classification loss - will lose the tug-of-war and collapse toward 0. Gates of **critical weights** resist because their gradient from classification loss is large enough to counteract the L1 penalty.
 
-The result: a **bimodal gate distribution** — a large spike near 0 (pruned weights) and a cluster of larger values (active weights).
+The result: a **bimodal gate distribution** - a large spike near 0 (pruned weights) and a cluster of larger values (active weights).
 
 ---
 
@@ -59,13 +59,13 @@ The network was trained for **30 epochs** on CIFAR-10 with **AdamW** optimizer (
 
 | Lambda (λ) | Test Accuracy | Sparsity Level (%) | Active Parameters | Notes |
 |:---:|:---:|:---:|:---:|:---|
-| `1e-5` | 55.2% | 12.1% | 3.25M | Baseline — minimal pruning |
+| `1e-5` | 55.2% | 12.1% | 3.25M | Baseline - minimal pruning |
 | `1e-4` | 54.1% | 38.4% | 2.28M | Moderate pruning |
-| `1e-3` ⭐ | **52.4%** | **73.1%** | 997K | **Best balance — chosen model** |
+| `1e-3` ⭐ | **52.4%** | **73.1%** | 997K | **Best balance - chosen model** |
 | `5e-3` | 46.7% | 89.2% | 401K | Aggressive pruning |
-| `5e-2` | 34.3% | 97.3% | 100K | Over-pruned — accuracy collapses |
+| `5e-2` | 34.3% | 97.3% | 100K | Over-pruned - accuracy collapses |
 
-> ⭐ **λ = 1e-3 is the optimal choice** — achieves 73% sparsity (only 997K active parameters out of 3.7M) with just a **2.8% accuracy drop** compared to the baseline. An excellent engineering tradeoff.
+> ⭐ **λ = 1e-3 is the optimal choice** - achieves 73% sparsity (only 997K active parameters out of 3.7M) with just a **2.8% accuracy drop** compared to the baseline. An excellent engineering tradeoff.
 
 ### Analysis
 
@@ -73,11 +73,11 @@ The network was trained for **30 epochs** on CIFAR-10 with **AdamW** optimizer (
 
 - **Medium λ (1e-4):** A meaningful 38.4% of gates collapse to near-zero, reducing active parameters to 2.28M. Accuracy drops only marginally to 54.1%. A reasonable tradeoff if memory savings are a modest concern.
 
-- **Optimal λ (1e-3) ⭐:** This is the sweet spot. 73.1% of all gates collapse to zero, leaving only ~997K active parameters — a **3.7× compression** of the network. Accuracy is 52.4%, only 2.8 percentage points below the unregularised baseline. The gate distribution shows the clearest bimodal shape here.
+- **Optimal λ (1e-3) ⭐:** This is the sweet spot. 73.1% of all gates collapse to zero, leaving only ~997K active parameters - a **3.7× compression** of the network. Accuracy is 52.4%, only 2.8 percentage points below the unregularised baseline. The gate distribution shows the clearest bimodal shape here.
 
-- **High λ (5e-3):** The sparsity penalty becomes dominant. 89.2% of weights are pruned, but accuracy drops noticeably to 46.7% — the network is losing connections it actually needed.
+- **High λ (5e-3):** The sparsity penalty becomes dominant. 89.2% of weights are pruned, but accuracy drops noticeably to 46.7% - the network is losing connections it actually needed.
 
-- **Extreme λ (5e-2):** Over-pruning. 97.3% of the network is silenced, leaving only ~100K active parameters. Test accuracy collapses to 34.3% — barely above chance for a 10-class problem. Demonstrates the upper bound of the λ tradeoff clearly.
+- **Extreme λ (5e-2):** Over-pruning. 97.3% of the network is silenced, leaving only ~100K active parameters. Test accuracy collapses to 34.3% - barely above chance for a 10-class problem. Demonstrates the upper bound of the λ tradeoff clearly.
 
 ---
 
@@ -99,7 +99,7 @@ Count
   0   0.1  0.2 ... 0.5  ... 1.0
 ```
 
-At **λ = 1e-3 (best model)**: ~73% of gates are concentrated near 0 and ~27% remain near 1 — a clear bimodal pattern confirming successful self-pruning. Gates don't hover in the middle; they **commit** either to being active or being dead.
+At **λ = 1e-3 (best model)**: ~73% of gates are concentrated near 0 and ~27% remain near 1 - a clear bimodal pattern confirming successful self-pruning. Gates don't hover in the middle; they **commit** either to being active or being dead.
 
 - **Low λ (1e-5):** Relatively flat distribution, small spike at 0, most gates stay open
 - **Medium λ (1e-4):** Emerging bimodal shape — spike at 0 growing noticeably
