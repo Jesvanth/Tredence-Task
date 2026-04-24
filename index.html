@@ -1,0 +1,837 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Self-Pruning Neural Network | AI Engineering Case Study</title>
+  <meta name="description"
+    content="A dynamic neural network that learns to remove its weakest connections during training using learnable gating and sparsity regularization. AI Engineering internship case study for Tredence." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap"
+    rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+
+<body>
+
+  <!-- ── NAV ── -->
+  <nav class="navbar" id="navbar">
+    <div class="nav-inner">
+      <div class="nav-logo">
+        <span class="logo-icon">⚡</span>
+        <span class="logo-text">SelfPrune<span class="logo-accent">NN</span></span>
+      </div>
+      <ul class="nav-links">
+        <li><a href="#problem">Problem</a></li>
+        <li><a href="#architecture">Architecture</a></li>
+        <li><a href="#simulator">Simulator</a></li>
+        <li><a href="#results">Results</a></li>
+        <li><a href="#about">About</a></li>
+      </ul>
+      <a href="#contact" class="nav-cta">Contact</a>
+      <button class="hamburger" id="hamburger" aria-label="Menu">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- ── HERO ── -->
+  <section class="hero" id="hero">
+    <div class="hero-bg">
+      <canvas id="heroCanvas"></canvas>
+    </div>
+    <div class="hero-content">
+      <div class="hero-badge">
+        <span class="badge-dot"></span>
+        Tredence AI Engineering — Case Study
+      </div>
+      <h1 class="hero-title">
+        Self-Pruning<br />
+        <span class="gradient-text">Neural Network</span>
+      </h1>
+      <p class="hero-subtitle">
+        A dynamic neural network that learns to remove its weakest connections during training
+        using <strong>learnable gating</strong> and <strong>sparsity regularization</strong>.
+        Built with PyTorch on CIFAR-10.
+      </p>
+      <div class="hero-stats">
+        <div class="stat-pill">
+          <span class="stat-val">~52%</span>
+          <span class="stat-label">Test Accuracy</span>
+        </div>
+        <div class="stat-pill">
+          <span class="stat-val">~73%</span>
+          <span class="stat-label">Sparsity</span>
+        </div>
+        <div class="stat-pill">
+          <span class="stat-val">3.7M</span>
+          <span class="stat-label">Total Params</span>
+        </div>
+        <div class="stat-pill">
+          <span class="stat-val">30</span>
+          <span class="stat-label">Epochs</span>
+        </div>
+      </div>
+      <div class="hero-buttons">
+        <a href="#simulator" class="btn btn-primary">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polygon points="5,3 19,12 5,21" />
+          </svg>
+          View Demo
+        </a>
+        <a href="#results" class="btn btn-secondary">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="22,12 18,12 15,21 9,3 6,12 2,12" />
+          </svg>
+          View Results
+        </a>
+        <a href="#github" class="btn btn-outline">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+            <path
+              d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z" />
+          </svg>
+          GitHub Repo
+        </a>
+        <a href="#contact" class="btn btn-outline">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+            <polyline points="22,6 12,13 2,6" />
+          </svg>
+          Contact
+        </a>
+      </div>
+    </div>
+    <div class="scroll-indicator">
+      <div class="scroll-dot"></div>
+    </div>
+  </section>
+
+  <!-- ── PROBLEM STATEMENT ── -->
+  <section class="section problem-section" id="problem">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-tag">01 — Problem Statement</span>
+        <h2 class="section-title">Why Self-Pruning?</h2>
+        <p class="section-desc">Modern deep networks carry millions of redundant parameters. We can do better.</p>
+      </div>
+      <div class="problem-grid">
+        <div class="problem-card reveal">
+          <div class="problem-icon">💾</div>
+          <h3>The Cost Problem</h3>
+          <p>Large neural networks require enormous memory and compute. A standard feed-forward network for CIFAR-10
+            holds <strong>3.7M+ parameters</strong>, most of which contribute little to accuracy.</p>
+        </div>
+        <div class="problem-card reveal">
+          <div class="problem-icon">✂️</div>
+          <h3>Traditional Pruning — Too Late</h3>
+          <p>Post-training pruning removes weights <em>after</em> a model is already trained. This is a two-step process
+            and cannot adapt dynamically. The network has no chance to <em>learn</em> to be sparse.</p>
+        </div>
+        <div class="problem-card reveal highlight-card">
+          <div class="problem-icon">🧠</div>
+          <h3>Our Approach — Learn to Prune</h3>
+          <p>We give each weight a <strong>learnable gate</strong> ∈ (0, 1). When the optimizer finds a weight
+            unnecessary, it drives that gate toward zero — permanently silencing it <em>during training</em>.</p>
+        </div>
+        <div class="problem-card reveal">
+          <div class="problem-icon">⚙️</div>
+          <h3>The Mechanism</h3>
+          <div class="formula-inline">
+            <code>Effective Weight = W × sigmoid(gate_score)</code>
+          </div>
+          <p>As gate → 0, the weight is effectively removed. Gradients flow through both the weight and the gate score,
+            making this fully end-to-end trainable.</p>
+        </div>
+      </div>
+      <div class="comparison-bar reveal">
+        <div class="compare-item">
+          <span class="compare-label">Traditional Pruning</span>
+          <div class="compare-flow">
+            <div class="flow-step">Train Model</div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-step">Evaluate</div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-step bad">Prune Weights</div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-step">Fine-tune</div>
+          </div>
+        </div>
+        <div class="compare-divider">VS</div>
+        <div class="compare-item">
+          <span class="compare-label">Self-Pruning (This Project)</span>
+          <div class="compare-flow">
+            <div class="flow-step good">Train + Prune Simultaneously</div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-step good">Done ✓</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── TECHNICAL ARCHITECTURE ── -->
+  <section class="section arch-section" id="architecture">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-tag">02 — Technical Architecture</span>
+        <h2 class="section-title">How It Works</h2>
+        <p class="section-desc">A modular PyTorch pipeline with custom learnable gating at every linear layer.</p>
+      </div>
+      <div class="arch-layout">
+        <div class="pipeline reveal">
+          <div class="pipeline-title">Model Forward Pass</div>
+          <div class="pipe-nodes">
+            <div class="pipe-node input-node">
+              <div class="node-icon">🖼️</div>
+              <div class="node-label">CIFAR-10 Images</div>
+              <div class="node-sub">3 × 32 × 32</div>
+            </div>
+            <div class="pipe-arrow">↓</div>
+            <div class="pipe-node">
+              <div class="node-icon">📐</div>
+              <div class="node-label">Flatten Input</div>
+              <div class="node-sub">→ 3072 features</div>
+            </div>
+            <div class="pipe-arrow">↓</div>
+            <div class="pipe-node prunable">
+              <div class="node-badge">PrunableLinear</div>
+              <div class="node-label">Layer 1 + BN + ReLU</div>
+              <div class="node-sub">3072 → 1024</div>
+            </div>
+            <div class="pipe-arrow">↓</div>
+            <div class="pipe-node prunable">
+              <div class="node-badge">PrunableLinear</div>
+              <div class="node-label">Layer 2 + BN + ReLU</div>
+              <div class="node-sub">1024 → 512</div>
+            </div>
+            <div class="pipe-arrow">↓</div>
+            <div class="pipe-node prunable">
+              <div class="node-badge">PrunableLinear</div>
+              <div class="node-label">Layer 3 + BN + ReLU</div>
+              <div class="node-sub">512 → 256</div>
+            </div>
+            <div class="pipe-arrow">↓</div>
+            <div class="pipe-node prunable">
+              <div class="node-badge">PrunableLinear</div>
+              <div class="node-label">Output Layer</div>
+              <div class="node-sub">256 → 10 classes</div>
+            </div>
+            <div class="pipe-arrow">↓</div>
+            <div class="pipe-node output-node">
+              <div class="node-icon">🎯</div>
+              <div class="node-label">Softmax Predictions</div>
+              <div class="node-sub">10 CIFAR-10 Classes</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="formulas-panel reveal">
+          <div class="formula-card">
+            <div class="formula-step">Step 1</div>
+            <div class="formula-title">Gate Generation</div>
+            <div class="formula-box">
+              <code>gate = σ(gate_score)</code>
+            </div>
+            <p>Each weight has a learnable score. Sigmoid maps it to (0, 1) — a soft switch.</p>
+          </div>
+          <div class="formula-card">
+            <div class="formula-step">Step 2</div>
+            <div class="formula-title">Pruned Weight</div>
+            <div class="formula-box">
+              <code>W_pruned = W × gate</code>
+            </div>
+            <p>Element-wise multiplication. When gate ≈ 0, the weight is effectively dead.</p>
+          </div>
+          <div class="formula-card">
+            <div class="formula-step">Step 3</div>
+            <div class="formula-title">Total Loss</div>
+            <div class="formula-box">
+              <code>L = CE + λ × Σ|gates|</code>
+            </div>
+            <p>Cross-entropy trains for accuracy. L1 gate penalty drives unnecessary gates to zero.</p>
+          </div>
+          <div class="formula-card formula-highlight">
+            <div class="formula-step">Result</div>
+            <div class="formula-title">Sparsity Loss</div>
+            <div class="formula-box">
+              <code>L_spar = Σ gates (all layers)</code>
+            </div>
+            <p>Sum of all gate values across layers. Minimized by optimizer → sparse network.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── INTERACTIVE LAMBDA SIMULATOR ── -->
+  <section class="section simulator-section" id="simulator">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-tag">03 — Interactive Demo</span>
+        <h2 class="section-title">Lambda (λ) Simulator</h2>
+        <p class="section-desc">Adjust the sparsity penalty and observe the accuracy–sparsity tradeoff in real time.</p>
+      </div>
+
+      <div class="simulator-layout">
+        <div class="slider-panel reveal">
+          <div class="slider-label-row">
+            <span>Sparsity Penalty λ</span>
+            <span class="lambda-display" id="lambdaDisplay">0.0010</span>
+          </div>
+          <input type="range" id="lambdaSlider" class="lambda-slider" min="0" max="100" value="33"
+            aria-label="Lambda sparsity penalty" />
+          <div class="slider-ticks">
+            <span>Low (0.0001)</span>
+            <span>Medium (0.005)</span>
+            <span>High (0.050)</span>
+          </div>
+
+          <div class="mode-description" id="modeDescription">
+            <div class="mode-indicator balanced" id="modeIndicator">⚖️ Balanced Mode</div>
+            <p id="modeText">Good tradeoff between accuracy and sparsity. Most useful for real-world deployment.</p>
+          </div>
+
+          <div class="metrics-grid">
+            <div class="metric-card">
+              <div class="metric-icon">🎯</div>
+              <div class="metric-val" id="metricAccuracy">52.4%</div>
+              <div class="metric-label">Test Accuracy</div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-icon">✂️</div>
+              <div class="metric-val" id="metricSparsity">73.1%</div>
+              <div class="metric-label">Sparsity</div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-icon">✅</div>
+              <div class="metric-val" id="metricActive">997K</div>
+              <div class="metric-label">Active Params</div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-icon">🚫</div>
+              <div class="metric-val" id="metricPruned">2.70M</div>
+              <div class="metric-label">Pruned Params</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="charts-panel reveal">
+          <div class="chart-tabs">
+            <button class="chart-tab active" data-chart="radar" id="tabRadar">Overview Radar</button>
+            <button class="chart-tab" data-chart="bar" id="tabBar">Metrics Bar</button>
+            <button class="chart-tab" data-chart="line" id="tabLine">Training Curve</button>
+          </div>
+          <div class="chart-container">
+            <canvas id="simulatorChart"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── RESULTS TABLE ── -->
+  <section class="section results-section" id="results">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-tag">04 — Experimental Results</span>
+        <h2 class="section-title">Lambda Comparison</h2>
+        <p class="section-desc">Results from 30-epoch training runs with AdamW + CosineAnnealing LR scheduler on
+          CIFAR-10.</p>
+      </div>
+
+      <div class="results-table-wrapper reveal">
+        <table class="results-table" id="resultsTable">
+          <thead>
+            <tr>
+              <th>Lambda (λ)</th>
+              <th>Test Accuracy</th>
+              <th>Sparsity %</th>
+              <th>Active Parameters</th>
+              <th>Model Quality</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr data-lambda="1e-5">
+              <td><code>1e-5</code></td>
+              <td><span class="acc-badge high">55.2%</span></td>
+              <td>
+                <div class="sparsity-bar">
+                  <div class="sparsity-fill" style="width:12%"></div><span>12.1%</span>
+                </div>
+              </td>
+              <td>3.25M</td>
+              <td><span class="quality-tag baseline">Baseline</span></td>
+            </tr>
+            <tr data-lambda="1e-4">
+              <td><code>1e-4</code></td>
+              <td><span class="acc-badge high">54.1%</span></td>
+              <td>
+                <div class="sparsity-bar">
+                  <div class="sparsity-fill" style="width:38%"></div><span>38.4%</span>
+                </div>
+              </td>
+              <td>2.28M</td>
+              <td><span class="quality-tag good">Good</span></td>
+            </tr>
+            <tr data-lambda="1e-3" class="best-row">
+              <td><code>1e-3</code> <span class="best-badge">★ Best</span></td>
+              <td><span class="acc-badge high">52.4%</span></td>
+              <td>
+                <div class="sparsity-bar">
+                  <div class="sparsity-fill" style="width:73%"></div><span>73.1%</span>
+                </div>
+              </td>
+              <td>997K</td>
+              <td><span class="quality-tag best">Best Balance</span></td>
+            </tr>
+            <tr data-lambda="5e-3">
+              <td><code>5e-3</code></td>
+              <td><span class="acc-badge med">46.7%</span></td>
+              <td>
+                <div class="sparsity-bar">
+                  <div class="sparsity-fill" style="width:89%"></div><span>89.2%</span>
+                </div>
+              </td>
+              <td>401K</td>
+              <td><span class="quality-tag ok">Aggressive</span></td>
+            </tr>
+            <tr data-lambda="5e-2">
+              <td><code>5e-2</code></td>
+              <td><span class="acc-badge low">34.3%</span></td>
+              <td>
+                <div class="sparsity-bar">
+                  <div class="sparsity-fill" style="width:97%"></div><span>97.3%</span>
+                </div>
+              </td>
+              <td>100K</td>
+              <td><span class="quality-tag poor">Over-pruned</span></td>
+            </tr>
+          </tbody>
+        </table>
+        <p class="table-note">★ λ=1e-3 achieves 73% sparsity with only a 2.8% accuracy drop — an optimal engineering
+          tradeoff.</p>
+      </div>
+
+
+  </section>
+
+  <!-- ── GATE DISTRIBUTION ── -->
+  <section class="section gate-section" id="gates">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-tag">05 — Gate Analysis</span>
+        <h2 class="section-title">Gate Distribution</h2>
+        <p class="section-desc">After training, gate values polarize — most collapse near 0, a minority stay near 1.
+          This bimodal pattern is the hallmark of successful self-pruning.</p>
+
+
+            <div class="annotation-box pruned-ann">
+              <strong>~73% gates</strong><br />collapsed near 0<br /><small>Redundant connections removed</small>
+            </div>
+            <div class="annotation-box active-ann">
+              <strong>~27% gates</strong><br />remain near 1<br /><small>Essential connections preserved</small>
+            </div>
+          </div>
+        <div class="gate-insights reveal">
+          <h3>What This Means</h3>
+          <div class="insight-item">
+            <div class="insight-dot green"></div>
+            <div>
+              <strong>Bimodal Distribution</strong>
+              <p>Gates don't hover in the middle — they commit. Either a connection matters (gate ≈ 1) or it doesn't
+                (gate ≈ 0). This is exactly what we want.</p>
+            </div>
+          </div>
+          <div class="insight-item">
+            <div class="insight-dot blue"></div>
+            <div>
+              <strong>L1 Drives Zero-Collapse</strong>
+              <p>The L1 penalty creates a constant gradient pull toward zero regardless of current gate value. Unlike
+                L2, small gates still feel the full push.</p>
+            </div>
+          </div>
+          <div class="insight-item">
+            <div class="insight-dot purple"></div>
+            <div>
+              <strong>No Manual Engineering</strong>
+              <p>The network discovers which connections matter entirely on its own. No human-defined importance scores,
+                no structured masks — purely data-driven.</p>
+            </div>
+          </div>
+          <div class="insight-item">
+            <div class="insight-dot orange"></div>
+            <div>
+              <strong>Real-time Adaptability</strong>
+              <p>Because gates are learned jointly with weights, the network can compensate — redistributing importance
+                to surviving connections as pruning progresses.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── L1 EXPLANATION ── -->
+  <section class="section l1-section" id="l1">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-tag">06 — Theory</span>
+        <h2 class="section-title">Why L1 Encourages Sparsity</h2>
+        <p class="section-desc">The mathematical intuition behind why L1 — not L2 — is the right tool for pushing gates
+          to zero.</p>
+      </div>
+      <div class="l1-grid">
+        <div class="l1-card reveal">
+          <div class="l1-num">01</div>
+          <h3>Constant Gradient Pressure</h3>
+          <div class="l1-formula"><code>∂|x|/∂x = sign(x)</code></div>
+          <p>The gradient of L1 is <strong>±1 regardless of magnitude</strong>. Even a gate at 0.001 feels the same push
+            toward zero as a gate at 0.5. This is why L1 produces true zeros.</p>
+        </div>
+        <div class="l1-card reveal">
+          <div class="l1-num">02</div>
+          <h3>L2 Fails Here</h3>
+          <div class="l1-formula"><code>∂x²/∂x = 2x → 0 as x→0</code></div>
+          <p>L2's gradient <strong>shrinks to zero</strong> as the weight shrinks. Small gates feel almost no pressure —
+            they never fully collapse, just become very small. No true sparsity.</p>
+        </div>
+        <div class="l1-card reveal">
+          <div class="l1-num">03</div>
+          <h3>Optimizer Mechanics</h3>
+          <div class="l1-formula"><code>gate_new = gate - lr × (∂CE/∂g + λ·sign(g))</code></div>
+          <p>AdamW steps push gates toward zero via the λ·sign(gate) term at every update. Over 30 epochs, unnecessary
+            gates accumulate pressure until they collapse.</p>
+        </div>
+        <div class="l1-card reveal">
+          <div class="l1-num">04</div>
+          <h3>The Geometric View</h3>
+          <p>L1 regularization corresponds to an <strong>L1-ball constraint</strong> — a diamond in weight space. Its
+            corners lie on the axes, making sparse solutions (many zeros) the most likely minimum of the constrained
+            problem.</p>
+        </div>
+      </div>
+
+      <div class="l1-visual reveal">
+        <canvas id="l1CompChart"></canvas>
+        <div class="l1-chart-caption">Gradient magnitude vs weight value — L1 vs L2 comparison</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── ENGINEERING IMPLEMENTATION ── -->
+  <section class="section stack-section" id="stack">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-tag">07 — Engineering</span>
+        <h2 class="section-title">Tech Stack</h2>
+        <p class="section-desc">Every component was chosen for production-quality ML engineering.</p>
+      </div>
+      <div class="stack-grid">
+        <div class="stack-card reveal" data-tech="Python">
+          <div class="stack-icon">🐍</div>
+          <div class="stack-name">Python 3.11</div>
+          <div class="stack-desc">Clean, typed, modular code structure</div>
+        </div>
+        <div class="stack-card reveal" data-tech="PyTorch">
+          <div class="stack-icon">🔥</div>
+          <div class="stack-name">PyTorch 2.x</div>
+          <div class="stack-desc">Custom nn.Module, autograd gating</div>
+        </div>
+        <div class="stack-card reveal" data-tech="CIFAR-10">
+          <div class="stack-icon">🗃️</div>
+          <div class="stack-name">CIFAR-10</div>
+          <div class="stack-desc">50K train / 10K test, 10 classes</div>
+        </div>
+        <div class="stack-card reveal" data-tech="NumPy">
+          <div class="stack-icon">🔢</div>
+          <div class="stack-name">NumPy</div>
+          <div class="stack-desc">Gate analysis and metric computation</div>
+        </div>
+        <div class="stack-card reveal" data-tech="AdamW">
+          <div class="stack-icon">⚡</div>
+          <div class="stack-name">AdamW Optimizer</div>
+          <div class="stack-desc">Decoupled weight decay regularization</div>
+        </div>
+        <div class="stack-card reveal" data-tech="Scheduler">
+          <div class="stack-icon">📉</div>
+          <div class="stack-name">Cosine LR Scheduler</div>
+          <div class="stack-desc">Smooth learning rate decay over epochs</div>
+        </div>
+        <div class="stack-card reveal" data-tech="BatchNorm">
+          <div class="stack-icon">📊</div>
+          <div class="stack-name">BatchNorm + Dropout</div>
+          <div class="stack-desc">Training stability and generalization</div>
+        </div>
+        <div class="stack-card reveal" data-tech="GPU">
+          <div class="stack-icon">🖥️</div>
+          <div class="stack-name">GPU Support (CUDA)</div>
+          <div class="stack-desc">Automatic device detection with fallback</div>
+        </div>
+        <div class="stack-card reveal" data-tech="Matplotlib">
+          <div class="stack-icon">📈</div>
+          <div class="stack-name">Matplotlib</div>
+          <div class="stack-desc">Gate distribution & training curve plots</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── CODE QUALITY / RECRUITER ── -->
+  <section class="section quality-section" id="quality">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-tag">08 — Code Quality</span>
+        <h2 class="section-title">Engineering Highlights</h2>
+        <p class="section-desc">This project demonstrates production-level ML engineering beyond the assignment scope.
+        </p>
+      </div>
+      <div class="quality-grid">
+        <div class="quality-card reveal">
+          <div class="quality-icon">🔩</div>
+          <h3>Custom Neural Layer from Scratch</h3>
+          <p>PrunableLinear extends <code>nn.Module</code> from scratch — no wrappers. Implements custom forward pass,
+            gate extraction, sparsity computation, and extra_repr for debugging.</p>
+          <div class="code-snippet">
+            <pre><code>class PrunableLinear(nn.Module):
+    def forward(self, x):
+        gates = torch.sigmoid(self.gate_scores)
+        W = self.weight * gates
+        return F.linear(x, W, self.bias)</code></pre>
+          </div>
+        </div>
+        <div class="quality-card reveal">
+          <div class="quality-icon">🛡️</div>
+          <h3>Gradient-Safe Gating Mechanism</h3>
+          <p>Gate scores remain in the compute graph during loss calculation. Sigmoid is differentiable everywhere —
+            gradients flow cleanly to both weights and gate scores simultaneously.</p>
+          <div class="code-snippet">
+            <pre><code>def sparsity_loss(self):
+    total = torch.tensor(0.0, requires_grad=True)
+    for layer in self.prunable_layers():
+        gates = torch.sigmoid(layer.gate_scores)
+        total = total + gates.abs().sum()
+    return total</code></pre>
+          </div>
+        </div>
+        <div class="quality-card reveal">
+          <div class="quality-icon">🧪</div>
+          <h3>Hyperparameter Experiments</h3>
+          <p>Systematic sweep across 5 lambda values (1e-5 to 5e-2). Each run is fully reproducible with fixed seeds,
+            measured on the same test split. Results quantify the accuracy-sparsity tradeoff curve.</p>
+        </div>
+        <div class="quality-card reveal">
+          <div class="quality-icon">🔁</div>
+          <h3>Reproducible Training</h3>
+          <p><code>torch.manual_seed(42)</code> and <code>np.random.seed(42)</code> guarantee identical results across
+            runs. Critical for fair comparison across lambda sweeps.</p>
+        </div>
+        <div class="quality-card reveal">
+          <div class="quality-icon">📊</div>
+          <h3>Metrics Tracking</h3>
+          <p>Per-epoch logging of classification loss, sparsity loss, train accuracy, test accuracy, and global sparsity
+            ratio. Full history saved for post-hoc analysis and plot generation.</p>
+        </div>
+        <div class="quality-card reveal">
+          <div class="quality-icon">🚀</div>
+          <h3>Deployment-Ready Presentation</h3>
+          <p>This interactive web app demonstrates not just the ML — but full-stack engineering skill. Code is modular,
+            documented, and structured for GitHub submission and recruiter review.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── GITHUB SECTION ── -->
+  <section class="section github-section" id="github">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-tag">09 — Repository</span>
+        <h2 class="section-title">GitHub Submission</h2>
+        <p class="section-desc">Clean, documented, ready to clone and run.</p>
+      </div>
+      <div class="github-layout reveal">
+        <div class="repo-structure">
+          <div class="repo-header">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="white">
+              <path
+                d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z" />
+            </svg>
+            self-pruning-nn / main
+          </div>
+          <div class="file-tree">
+            <div class="tree-item file py">
+              <span class="tree-icon">📄</span>
+              <span class="tree-name">train.py</span>
+              <span class="tree-desc">Main training loop + experiment runner</span>
+            </div>
+            <div class="tree-item file md">
+              <span class="tree-icon">📝</span>
+              <span class="tree-name">report.md</span>
+              <span class="tree-desc">Technical report + analysis</span>
+            </div>
+            <div class="tree-item file md">
+              <span class="tree-icon">📖</span>
+              <span class="tree-name">README.md</span>
+              <span class="tree-desc">Setup, results, and usage guide</span>
+            </div>
+            <div class="tree-item file txt">
+              <span class="tree-icon">📦</span>
+              <span class="tree-name">requirements.txt</span>
+              <span class="tree-desc">torch, torchvision, numpy, matplotlib</span>
+            </div>
+            <div class="tree-item folder">
+              <span class="tree-icon">📁</span>
+              <span class="tree-name">outputs/</span>
+              <span class="tree-desc">Plots, metrics, saved checkpoints</span>
+            </div>
+            <div class="tree-item file py sub">
+              <span class="tree-icon">└─📄</span>
+              <span class="tree-name">gate_distributions.png</span>
+            </div>
+            <div class="tree-item file py sub">
+              <span class="tree-icon">└─📄</span>
+              <span class="tree-name">training_curves.png</span>
+            </div>
+            <div class="tree-item file py sub">
+              <span class="tree-icon">└─📄</span>
+              <span class="tree-name">results_summary.json</span>
+            </div>
+          </div>
+        </div>
+        <div class="github-actions">
+          <h3>Quick Start</h3>
+          <div class="code-block">
+            <pre><code><span class="code-comment"># Clone and install dependencies</span>
+git clone https://github.com/[username]/self-pruning-nn
+cd self-pruning-nn
+pip install -r requirements.txt
+
+<span class="code-comment"># Run experiment with lambda sweep</span>
+python train.py
+
+<span class="code-comment"># Results saved to outputs/</span></code></pre>
+          </div>
+          <a href="#" class="btn btn-primary btn-github">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+              <path
+                d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z" />
+            </svg>
+            View Source Code on GitHub
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── ABOUT CANDIDATE ── -->
+  <section class="section about-section" id="about">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-tag">10 — About</span>
+        <h2 class="section-title">Jesvanth S</h2>
+        <p class="section-desc">AI Engineering candidate with a production-first, builder mindset.</p>
+      </div>
+      <div class="about-layout">
+        <div class="about-profile reveal">
+          <div class="profile-avatar">
+            <div class="avatar-inner">
+              <img src="profile/profile.jpeg" alt="Jesvanth Profile"
+                style="width:100%; height:100%; border-radius:50%; object-fit:cover;">
+            </div>
+            <div class="avatar-ring"></div>
+          </div>
+          <div class="profile-info">
+            <h3 class="profile-name">Jesvanth, AI Engineering Candidate</h3>
+            <p class="profile-tagline">Building production-grade AI systems — from research to deployment</p>
+            <div class="profile-tags">
+              <span class="tag">🐍 Python</span>
+              <span class="tag">⚡ FastAPI</span>
+              <span class="tag">🤖 LLMs</span>
+              <span class="tag">🔍 RAG</span>
+              <span class="tag">🧠 Deep Learning</span>
+              <span class="tag">🔥 PyTorch</span>
+              <span class="tag">🔧 Backend Systems</span>
+              <span class="tag">📡 MLOps</span>
+            </div>
+          </div>
+        </div>
+        <div class="about-pillars reveal">
+          <div class="pillar-card">
+            <div class="pillar-icon">🏗️</div>
+            <h4>Builder Mindset</h4>
+            <p>I don't just solve the problem — I engineer it. This case study is a full-stack ML product with
+              interactive visualization, not just a training script.</p>
+          </div>
+          <div class="pillar-card">
+            <div class="pillar-icon">🔬</div>
+            <h4>Research + Practice</h4>
+            <p>Bridging academic ideas (learnable gating, L1 sparsity) with production code (modular PyTorch,
+              reproducible training, systematic experiments).</p>
+          </div>
+          <div class="pillar-card">
+            <div class="pillar-icon">📦</div>
+            <h4>Production Thinking</h4>
+            <p>Code is clean, typed, documented, and modular. Results are reproducible. Presentation is portfolio-grade.
+              Ready for technical review at any level.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── CONTACT ── -->
+  <section class="section contact-section" id="contact">
+    <div class="container">
+      <div class="contact-content reveal">
+        <h2 class="contact-title">Let's Connect</h2>
+        <p class="contact-sub">Open for AI Engineering internship and full-time opportunities. I build things that work.
+        </p>
+        <div class="contact-buttons">
+          <a href="https://in.linkedin.com/in/jesvanth" class="contact-btn linkedin">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+              <path
+                d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 0 1-2.063-2.065 2.064 2.064 0 1 1 2.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" />
+            </svg>
+            LinkedIn
+          </a>
+          <a href="https://github.com/jesvanth" class="contact-btn github">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+              <path
+                d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z" />
+            </svg>
+            GitHub
+          </a>
+          <a href="mailto:jesvanth@gmail.com" class="contact-btn email">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+              <polyline points="22,6 12,13 2,6" />
+            </svg>
+            Email
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── FOOTER ── -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-inner">
+        <div class="footer-logo">
+          <span class="logo-icon">⚡</span>
+          SelfPrune<span class="logo-accent">NN</span>
+        </div>
+        <p class="footer-text">Self-Pruning Neural Network — AI Engineering Case Study for Tredence</p>
+        <p class="footer-tech">Built with PyTorch · CIFAR-10 · AdamW · Learnable Gating · L1 Sparsity</p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+
+</html>
