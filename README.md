@@ -1,4 +1,4 @@
-# Self-Pruning Neural Network — Report
+# Self-Pruning Neural Network - Report
 **Tredence AI Engineering Internship Case Study**
 
 ---
